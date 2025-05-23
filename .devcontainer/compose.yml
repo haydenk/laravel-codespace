@@ -1,0 +1,56 @@
+services:
+  php-app:
+    build:
+      dockerfile: Dockerfile
+      args:
+        PHP_VERSION: 8.4
+    entrypoint: ""
+    command: "sleep infinity"
+    volumes:
+      - ${PWD}:/workspaces:cached
+    networks:
+      - laravel
+    environment:
+      TZ: ${TIME_ZONE-UTC}
+    depends_on:
+      - postgres
+
+  postgres:
+    image: 'postgres:alpine'
+    restart: unless-stopped
+    shm_size: 128mb
+    environment:
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD-laravel}
+      TZ: ${TIME_ZONE-UTC}
+    ports:
+      - 5432:5432
+    networks:
+      - laravel
+    volumes:
+      - pg-data:/var/lib/postgresql/data/
+  
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 8032:8080
+    depends_on:
+      - postgres
+    networks:
+      - laravel
+
+  mailcatcher:
+    image: sj26/mailcatcher
+    ports:
+      - "1080:1080"
+      - "1025:1025"
+    networks:
+      - laravel
+
+networks:
+  laravel:
+    driver: bridge
+
+volumes:
+  pg-data:
+  pg-admin-data:
